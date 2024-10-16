@@ -53,10 +53,11 @@ func sync_shows(cfg config.Config) {
 	shows:
 	for i, show := range shows.Data {
 
-
+		specified_id := false
 		if len(sonarrid) > 0 {
 			for _, id := range sonarrid {
 				if id == show.SonarrSeriesId {
+					specified_id = true
 					goto episodes
 				}
 			}
@@ -81,7 +82,7 @@ func sync_shows(cfg config.Config) {
 					pterm.Success.Prefix = pterm.Prefix{Text: "SUCCESS", Style: pterm.NewStyle(pterm.BgGreen, pterm.FgBlack)}
 					continue
 				}
-				if use_cache {
+				if !specified_id && use_cache {
 					_, exists := shows_cache[subtitle.Path]
 					if exists {
 						pterm.Success.Prefix = pterm.Prefix{Text: "SKIP", Style: pterm.NewStyle(pterm.BgLightBlue, pterm.FgBlack)}

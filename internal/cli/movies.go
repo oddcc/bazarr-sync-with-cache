@@ -53,9 +53,11 @@ func sync_movies(cfg config.Config) {
 	
 	movies:
 	for i, movie := range movies.Data {
+		specified_id := false
 		if len(radarrid) > 0 {
 			for _, id := range radarrid {
 				if id == movie.RadarrId {
+					specified_id = true
 					goto subtitle
 				}
 			}
@@ -71,7 +73,7 @@ func sync_movies(cfg config.Config) {
 				pterm.Success.Prefix = pterm.Prefix{Text: "SUCCESS", Style: pterm.NewStyle(pterm.BgGreen, pterm.FgBlack)}
 				continue
 			}
-			if use_cache {
+			if !specified_id && use_cache {
 				_, exists := movies_cache[subtitle.Path]
 				if exists {
 					pterm.Success.Prefix = pterm.Prefix{Text: "SKIP", Style: pterm.NewStyle(pterm.BgLightBlue, pterm.FgBlack)}
