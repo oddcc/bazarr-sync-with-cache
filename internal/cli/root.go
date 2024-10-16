@@ -4,7 +4,10 @@ Copyright © 2024 ajmandourah
 package cli
 
 import (
+	"bufio"
+	"fmt"
 	"os"
+
 	"github.com/ajmandourah/bazarr-sync/internal/config"
 
 	"github.com/spf13/cobra"
@@ -12,7 +15,10 @@ import (
 
 var gss bool
 var no_framerate_fix bool
-var to_list bool 
+var to_list bool
+var use_cache bool
+var movies_cache = make(map[string]bool)
+var shows_cache = make(map[string]bool)
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "bazarr-sync",
@@ -48,5 +54,63 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&no_framerate_fix,"no-framerate-fix",false,"Don't try to fix framerate")
 
 	rootCmd.PersistentFlags().BoolVar(&to_list,"list",false,"list your media with their respective Radarr/Sonarr id.")
+
+	rootCmd.PersistentFlags().BoolVar(&use_cache, "use-cache", false, "Default is false. Not work if you set --radarr-id or --sonarr-id.")
 }
 
+func Load_cache() {
+	if !use_cache {
+		return
+	}
+	movies_cache_file, err := os.Open("movies-cache")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error opening movies_cache file: ", err)
+		os.Exit(1)
+	}
+	defer movies_cache_file.Close()
+	scanner := bufio.NewScanner(movies_cache_file)
+	for scanner.Scan() {
+		movies_cache[scanner.Text()] = true
+	}
+	shows_cache_file, err := os.Open("shows-cache")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error opening shows_cache file: ", err)
+	}
+	defer shows_cache_file.Close()
+	scanner = bufio.NewScanner(shows_cache_file)
+	for scanner.Scan() {
+		shows_cache[scanner.Text()] = true
+	}
+}
+
+func Write_movies_cache(key string) {
+	if !use_cache {
+		return
+	}
+	movies_cache[key] = true
+	file, err := os.Create("movies-cache")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error writing movies_cache file: ", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+	for key := range movies_cache {
+		fmt.Fprintln(file, key)
+	}
+}
+
+func Write_shows_cache(key string) {
+	if !use_cache {
+		return
+	}
+	shows_cache[key] = true
+	file, err := os.Create("shows-cache")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error writing shows_cache file: ", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+	for key := range shows_cache {
+		fmt.Fprintln(file, key)
+	}
+}

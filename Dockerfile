@@ -9,4 +9,6 @@ RUN go mod download && go mod verify
 COPY . .
 RUN go build -v -o /usr/local/bin/bazarr-sync ./cmd/bazarr-sync/
 RUN touch config.yaml
+RUN touch movies-cache
+RUN touch shows-cache
 CMD ["bazarr-sync"]

@@ -1,3 +1,6 @@
 build/
 cmd/bazarr-sync/config.yaml
-
+cmd/bazarr-sync/movies-cache
+cmd/bazarr-sync/shows-cache
+.vscode
+__debug*

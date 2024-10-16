@@ -27,6 +27,7 @@ var moviesCmd = &cobra.Command{
 This can fail due to many reasons mainly due to failure of bazarr to extract audio info. This is unfortunatly out of my hands.
 The script by default will try to not use the golden section search method and will try to fix framerate issues. This can be changed using the flags.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		Load_cache()
 		cfg := config.GetConfig()
 		bazarr.HealthCheck(cfg)
 		if to_list {
@@ -70,12 +71,22 @@ func sync_movies(cfg config.Config) {
 				pterm.Success.Prefix = pterm.Prefix{Text: "SUCCESS", Style: pterm.NewStyle(pterm.BgGreen, pterm.FgBlack)}
 				continue
 			}
+			if use_cache {
+				_, exists := movies_cache[subtitle.Path]
+				if exists {
+					pterm.Success.Prefix = pterm.Prefix{Text: "SKIP", Style: pterm.NewStyle(pterm.BgLightBlue, pterm.FgBlack)}
+					p.Success(pterm.LightBlue(movie.Title, " Subtitle already synced. Lang: ", subtitle.Code2))
+					pterm.Success.Prefix = pterm.Prefix{Text: "SUCCESS", Style: pterm.NewStyle(pterm.BgGreen, pterm.FgBlack)}
+					continue
+				}
+			}
 			params := bazarr.GetSyncParams("movie", movie.RadarrId, subtitle)
 			if gss {params.Gss = "True"}
 			if no_framerate_fix {params.No_framerate_fix = "True"}
 			ok := bazarr.Sync(cfg,params)	
 			if ok {
 				p.Success("Synced ", movie.Title, " lang:", subtitle.Code2)
+				Write_movies_cache(subtitle.Path)
 				continue
 
 			} else {
